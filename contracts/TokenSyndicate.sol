@@ -6,7 +6,7 @@ contract TokenSyndicate {
     uint256 public constant kwei = 1000;
 
     address public tokenContract;
-    uint256 public tokensPerEth;
+    uint256 public tokenExchangeRate;
     uint256 public minFeePerKwei;
     uint256 public maxPresaleEthAllowed;
     uint256 public presaleStartBlock;
@@ -24,7 +24,7 @@ contract TokenSyndicate {
 
     function TokenSyndicate(
     address _tokenContract,
-    uint256 _tokensPerEth,
+    uint256 _tokenExchangeRate,
     uint256 _minFeePerKwei,
     uint256 _maxPresaleEthAllowed,
     uint256 _presaleStartBlock,
@@ -33,11 +33,11 @@ contract TokenSyndicate {
         if (_minFeePerKwei == 0) throw;     // you must provide a fee.
         if (_maxPresaleEthAllowed == 0) throw;
         if (_tokenContract == address(0)) throw;
-        if (_tokensPerEth == 0) throw;
+        if (_tokenExchangeRate == 0) throw;
         if(_presaleStartBlock >= _presaleEndBlock) throw;     // the presale must start before it finishes.
 
         tokenContract = _tokenContract;
-        tokensPerEth = _tokensPerEth;
+        tokenExchangeRate = _tokenExchangeRate;
         minFeePerKwei = _minFeePerKwei;
         maxPresaleEthAllowed = _maxPresaleEthAllowed;
         presaleStartBlock = _presaleStartBlock;

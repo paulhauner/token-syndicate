@@ -2,7 +2,7 @@ const TokenSyndicateFactory = artifacts.require("./TokenSyndicateFactory.sol");
 
 const valid = {
     tokenContract: 1,
-    tokensPerEth: 20000,
+    tokenExchangeRate: 20000,
     minFeePerKwei: 250,
     maxPresaleEthAllowed: 1000000,
     presaleStartBlock: 0,
@@ -13,7 +13,7 @@ contract('TokenSyndicateFactory', function(accounts) {
     it("should create new syndicates", function() {
         return TokenSyndicateFactory.deployed()
             .then(function(factory) {
-                return factory.createSyndicate(valid.tokenContract, valid.tokensPerEth, valid.minFeePerKwei,
+                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minFeePerKwei,
                     valid.maxPresaleEthAllowed, valid.presaleStartBlock, valid.presaleEndBlock);
             })
             .then(function(tx) {
@@ -26,7 +26,7 @@ contract('TokenSyndicateFactory', function(accounts) {
     it("should throw if syndicates finish before they start", function() {
         return TokenSyndicateFactory.deployed()
             .then(function(factory) {
-                return factory.createSyndicate(valid.tokenContract, valid.tokensPerEth, valid.minFeePerKwei,
+                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minFeePerKwei,
                     valid.maxPresaleEthAllowed, 1, 0);
             })
             .then(assert.fail)
@@ -38,7 +38,7 @@ contract('TokenSyndicateFactory', function(accounts) {
     it("should throw if fees are too high", function() {
         return TokenSyndicateFactory.deployed()
             .then(function(factory) {
-                return factory.createSyndicate(valid.tokenContract, valid.tokensPerEth, 1000,
+                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, 1000,
                     valid.maxPresaleEthAllowed, valid.presaleStartBlock, valid.presaleEndBlock);
             })
             .then(assert.fail)
@@ -50,7 +50,7 @@ contract('TokenSyndicateFactory', function(accounts) {
     it("should throw if fees are too low", function() {
         return TokenSyndicateFactory.deployed()
             .then(function(factory) {
-                return factory.createSyndicate(valid.tokenContract, valid.tokensPerEth, 0,
+                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, 0,
                     valid.maxPresaleEthAllowed, valid.presaleStartBlock, valid.presaleEndBlock);
             })
             .then(assert.fail)
@@ -62,7 +62,7 @@ contract('TokenSyndicateFactory', function(accounts) {
     it("should throw if there is no eth allowed for presale", function() {
         return TokenSyndicateFactory.deployed()
             .then(function(factory) {
-                return factory.createSyndicate(valid.tokenContract, valid.tokensPerEth, valid.minFeePerKwei,
+                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minFeePerKwei,
                     0, valid.presaleStartBlock, valid.presaleEndBlock);
             })
             .then(assert.fail)
@@ -86,7 +86,7 @@ contract('TokenSyndicateFactory', function(accounts) {
     it("should throw if the token contract address is zero", function() {
         return TokenSyndicateFactory.deployed()
             .then(function(factory) {
-                return factory.createSyndicate(0, valid.tokensPerEth, valid.minFeePerKwei,
+                return factory.createSyndicate(0, valid.tokenExchangeRate, valid.minFeePerKwei,
                     valid.maxPresaleEthAllowed, valid.presaleStartBlock, valid.presaleEndBlock);
             })
             .then(assert.fail)

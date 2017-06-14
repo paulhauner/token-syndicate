@@ -5,7 +5,7 @@ const BAToken = artifacts.require("./BAT/BAToken.sol");
 
 const valid = {
     tokenContract: 1,
-    tokensPerEth: 20000,
+    tokenExchangeRate: 20000,
     minFeePerKwei: 250,
     maxPresaleEthAllowed: 1000000,
     presaleStartBlock: 0,
@@ -40,7 +40,7 @@ contract('TokenSyndicateFactory', function(accounts) {
             })
             .then(function(factory) {
                 // create a new token syndicate
-                return factory.createSyndicate(tokenContractAddress, valid.tokensPerEth, valid.minFeePerKwei,
+                return factory.createSyndicate(tokenContractAddress, valid.tokenExchangeRate, valid.minFeePerKwei,
                     valid.maxPresaleEthAllowed, valid.presaleStartBlock, valid.presaleEndBlock);
             })
             .then(function(tx) {
