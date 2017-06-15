@@ -7,30 +7,30 @@ contract TokenSyndicate {
 
     address public tokenContract;
     uint256 public tokenExchangeRate;
-    uint256 public minFeePerKwei;
+    uint256 public minBountyPerKwei;
     uint256 public maxPresaleEthAllowed;
     uint256 public presaleStartBlock;
     uint256 public presaleEndBlock;
     address public winner;
 
     uint256 public totalPresale;
-    uint256 public totalFees;
+    uint256 public totalBounties;
 
     mapping(address => uint256) public presaleBalances;
-    mapping(address => uint256) public feeBalances;
+    mapping(address => uint256) public bountyBalances;
 
-    event LogCreatePresaleInvestment(address indexed _to, uint256 fee, uint256 presale);
-    event LogRefundPresaleInvestment(address indexed _to, uint256 fee, uint256 presale);
+    event LogCreatePresaleInvestment(address indexed _to, uint256 bounty, uint256 presale);
+    event LogRefundPresaleInvestment(address indexed _to, uint256 bounty, uint256 presale);
 
     function TokenSyndicate(
     address _tokenContract,
     uint256 _tokenExchangeRate,
-    uint256 _minFeePerKwei,
+    uint256 _minBountyPerKwei,
     uint256 _maxPresaleEthAllowed,
     uint256 _presaleStartBlock,
     uint256 _presaleEndBlock){
-        if (_minFeePerKwei >= kwei) throw;  // you may not have a fee of 100% or more.
-        if (_minFeePerKwei == 0) throw;     // you must provide a fee.
+        if (_minBountyPerKwei >= kwei) throw;  // you may not have a bounty of 100% or more.
+        if (_minBountyPerKwei == 0) throw;     // you must provide a bounty.
         if (_maxPresaleEthAllowed == 0) throw;
         if (_tokenContract == address(0)) throw;
         if (_tokenExchangeRate == 0) throw;
@@ -38,13 +38,13 @@ contract TokenSyndicate {
 
         tokenContract = _tokenContract;
         tokenExchangeRate = _tokenExchangeRate;
-        minFeePerKwei = _minFeePerKwei;
+        minBountyPerKwei = _minBountyPerKwei;
         maxPresaleEthAllowed = _maxPresaleEthAllowed;
         presaleStartBlock = _presaleStartBlock;
         presaleEndBlock = _presaleEndBlock;
 
         totalPresale = 0;
-        totalFees = 0;
+        totalBounties = 0;
         winner = address(0);
     }
 
@@ -52,32 +52,32 @@ contract TokenSyndicate {
         Invest in this contract in order to have tokens purchased on your behalf when the buyTokens() contract
         is called without a `throw`.
     */
-    function createPresaleInvestment(uint256 feePerKwei) payable external {
+    function createPresaleInvestment(uint256 bountyPerKwei) payable external {
         if(block.number < presaleStartBlock) throw; // you must call within the block time bounds of the presale.
         if(block.number > presaleEndBlock) throw;   // as above ^
-        if(feePerKwei < minFeePerKwei) throw;       // you must provide a fee/kw above or equal to the minimum fee/kw.
+        if(bountyPerKwei < minBountyPerKwei) throw;       // you must provide a bounty/kw above or equal to the minimum bounty/kw.
         if(msg.value == 0) throw;                   // you must provide some eth.
 
         /*
-            As the EVM does not currently support decimals, we are multiplying both msg.value and the fee
-            by 1000 before calculating the fee ratio in order to gain a reasonable degree of precision.
+            As the EVM does not currently support decimals, we are multiplying both msg.value and the bounty
+            by 1000 before calculating the bounty ratio in order to gain a reasonable degree of precision.
         */
-        uint256 feeWithKweiPrecision = SafeMath.div(SafeMath.mul(msg.value, kwei), SafeMath.mul(feePerKwei, kwei));
-        uint256 final_fee = SafeMath.div(msg.value, feeWithKweiPrecision);
-        uint256 final_presale = SafeMath.sub(msg.value, final_fee);
+        uint256 bountyWithKweiPrecision = SafeMath.div(SafeMath.mul(msg.value, kwei), SafeMath.mul(bountyPerKwei, kwei));
+        uint256 final_bounty = SafeMath.div(msg.value, bountyWithKweiPrecision);
+        uint256 final_presale = SafeMath.sub(msg.value, final_bounty);
 
-        feeBalances[msg.sender] += final_fee;
+        bountyBalances[msg.sender] += final_bounty;
         presaleBalances[msg.sender] += final_presale;
-        totalFees += final_fee;
+        totalBounties += final_bounty;
         totalPresale += final_presale;
-        LogCreatePresaleInvestment(msg.sender, final_fee, final_presale);       // create an event
+        LogCreatePresaleInvestment(msg.sender, final_bounty, final_presale);       // create an event
     }
 
     /*
-        Get the presaleBalance (ETH) and feeBalance (ETH) for an address.
+        Get the presaleBalance (ETH) and bountyBalance (ETH) for an address.
     */
-    function balanceOf(address _owner) constant returns (uint256 presaleBalance, uint256 feeBalance) {
-        return (presaleBalances[_owner], feeBalances[_owner]);
+    function balanceOf(address _owner) constant returns (uint256 presaleBalance, uint256 bountyBalance) {
+        return (presaleBalances[_owner], bountyBalances[_owner]);
     }
 
     /*
@@ -99,7 +99,7 @@ contract TokenSyndicate {
     /*
            Attempt to purchase the tokens from the token contract.
            Whichever address manages to successfully purchase/create the tokens will be the 'winner'.
-           The 'winner' is allowed to withdraw the fees from this contract.
+           The 'winner' is allowed to withdraw the bounties from this contract.
     */
     function buyTokens() external onlyWithoutWinner {
         winner = msg.sender;
@@ -107,23 +107,23 @@ contract TokenSyndicate {
     }
 
     /*
-        Refund a your investment and fee.
+        Refund a your investment and bounty.
         This is only possible if there has not been a 'winner' (ie, if tokens have not been purchased).
     */
     function refundPresaleInvestment() external onlyWithoutWinner {
-        uint256 feeValue = feeBalances[msg.sender];
+        uint256 bountyValue = bountyBalances[msg.sender];
         uint256 presaleValue = presaleBalances[msg.sender];
-        uint256 totalValue = SafeMath.add(feeValue, presaleValue);
+        uint256 totalValue = SafeMath.add(bountyValue, presaleValue);
 
-        if(feeValue == 0) throw;
+        if(bountyValue == 0) throw;
         if(presaleValue == 0) throw;
 
-        feeBalances[msg.sender] = 0;
+        bountyBalances[msg.sender] = 0;
         presaleBalances[msg.sender] = 0;
-        totalFees = SafeMath.sub(totalFees, feeValue);
+        totalBounties = SafeMath.sub(totalBounties, bountyValue);
         totalPresale = SafeMath.sub(totalPresale, presaleValue);
         msg.sender.transfer(totalValue);
-        LogRefundPresaleInvestment(msg.sender, feeValue, presaleValue);
+        LogRefundPresaleInvestment(msg.sender, bountyValue, presaleValue);
     }
 }
 

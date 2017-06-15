@@ -6,7 +6,7 @@ const BAToken = artifacts.require("./BAT/BAToken.sol");
 const valid = {
     tokenContract: 1,
     tokenExchangeRate: 20000,
-    minFeePerKwei: 250,
+    minBountyPerKwei: 250,
     maxPresaleEthAllowed: 1000000,
     presaleStartBlock: 0,
     presaleEndBlock: 10000
@@ -14,7 +14,7 @@ const valid = {
 
 contract('TokenSyndicateFactory', function(accounts) {
     const totalInvestmentInWei = 1100;
-    const feePerKwei = 250;
+    const bountyPerKwei = 250;
     let tokenContract = null;
     let tokenContractAddress = null;
     let syndicateContract = null;
@@ -40,7 +40,7 @@ contract('TokenSyndicateFactory', function(accounts) {
             })
             .then(function(factory) {
                 // create a new token syndicate
-                return factory.createSyndicate(tokenContractAddress, valid.tokenExchangeRate, valid.minFeePerKwei,
+                return factory.createSyndicate(tokenContractAddress, valid.tokenExchangeRate, valid.minBountyPerKwei,
                     valid.maxPresaleEthAllowed, valid.presaleStartBlock, valid.presaleEndBlock);
             })
             .then(function(tx) {
@@ -49,7 +49,7 @@ contract('TokenSyndicateFactory', function(accounts) {
                 const contractAddress = log.args.newSyndicateAddress;
                 syndicateContract = TokenSyndicate.at(contractAddress);
                 // buy some presale tokens from accounts[0]
-                return syndicateContract.createPresaleInvestment(feePerKwei, { from: accounts[0], value: totalInvestmentInWei})
+                return syndicateContract.createPresaleInvestment(bountyPerKwei, { from: accounts[0], value: totalInvestmentInWei})
             });
     });
 
@@ -57,13 +57,13 @@ contract('TokenSyndicateFactory', function(accounts) {
         return syndicateContract.balanceOf.call(accounts[0])
             .then(function(balances) {
                 const presale = balances[0].toString();
-                const fee = balances[1].toString();
+                const bounty = balances[1].toString();
                 assert(
-                    parseInt(fee) === (totalInvestmentInWei * (feePerKwei/1000)),
-                    'the account should have an accurate fee value'
+                    parseInt(bounty) === (totalInvestmentInWei * (bountyPerKwei/1000)),
+                    'the account should have an accurate bounty value'
                 );
                 assert(
-                    parseInt(presale) === (totalInvestmentInWei - (totalInvestmentInWei * (feePerKwei/1000))),
+                    parseInt(presale) === (totalInvestmentInWei - (totalInvestmentInWei * (bountyPerKwei/1000))),
                     'the account should have an accurate presale value'
                 );
             });
