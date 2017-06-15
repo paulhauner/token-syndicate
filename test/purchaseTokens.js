@@ -15,6 +15,9 @@ const valid = {
 contract('TokenSyndicateFactory', function(accounts) {
     const totalInvestmentInWei = 1100;
     const bountyPerKwei = 250;
+    const bountyValue = Math.floor(totalInvestmentInWei*(bountyPerKwei/1000));
+    const presaleValue = totalInvestmentInWei - bountyValue;
+    const batContractExchangeRate = 6400;
     let tokenContract = null;
     let tokenContractAddress = null;
     let syndicateContract = null;
@@ -71,14 +74,15 @@ contract('TokenSyndicateFactory', function(accounts) {
 
     it("should execute a token purchase when permitted by the token contract", function() {
         return syndicateContract.buyTokens({from: accounts[1]})
-    });
-
-    it("should have a valid token balance in the token contract", function() {
-        return tokenContract.balanceOf.call(syndicateContract.address)
+            .then(function() {
+                return tokenContract.balanceOf.call(syndicateContract.address)
+            })
             .then(function(balance) {
-                console.log(balance);
-                assert(balance.toNumber() > 0, 'the balance should be above zero');
-                assert(false, 'this test is not finished');
+                const expectedTokenBalance = presaleValue * batContractExchangeRate;
+                assert(
+                    balance.toNumber() === expectedTokenBalance,
+                    `we should have an accurate token balance. expected ${expectedTokenBalance} !== balance ${balance}`
+                );
             })
     });
 });
