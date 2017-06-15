@@ -85,5 +85,21 @@ contract('TokenSyndicateFactory', function(accounts) {
                 );
             })
     });
+
+    it("should throw if an investor attempts to withdraw after a winner has been determined", function() {
+        return syndicateContract.refundPresaleInvestment({from: accounts[1]})
+            .then(assert.fail)
+            .catch(function(error) {
+                assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
+            });
+    });
+
+    it("should allow an account to transfer their token entitlement to an address", function() {
+        return syndicateContract.refundPresaleInvestment({from: accounts[1]})
+            .then(assert.fail)
+            .catch(function(error) {
+                assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
+            });
+    });
 });
 
