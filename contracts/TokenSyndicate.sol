@@ -84,7 +84,7 @@ contract TokenSyndicate {
         If the 'winner' address is address(0), there has been no winner yet.
     */
     modifier onlyWithoutWinner() {
-        require(winner == address(0));
+        assert(winner == address(0));
         _;
     }
 
@@ -92,7 +92,7 @@ contract TokenSyndicate {
         If the 'winner' address is anything other than address(0), there has been a winner.
     */
     modifier onlyWithWinner() {
-        require(winner != address(0));
+        assert(winner != address(0));
         _;
     }
 
