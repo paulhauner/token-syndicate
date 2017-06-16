@@ -58,6 +58,7 @@ contract TokenSyndicate {
     function createPresaleInvestment(uint256 _bountyPerKwei) payable external {
         assert(_bountyPerKwei >= minBountyPerKwei);
         assert(msg.value > 0);
+        assert(msg.value >= kwei);  // this is a naive (but cheap) method of ensuring the bounty is always >= 1
 
         /*
             As the EVM does not currently support decimals, we are multiplying both msg.value and the bounty
@@ -103,10 +104,10 @@ contract TokenSyndicate {
         presaleBalances[msg.sender] = 0;
 
         /*
-               Attempt to transfer tokens to msg.sender.
-               Note: we are relying on the token contract to return a success bool (true for success). If this
-               bool is not implemented as expected it may be possible for an account to withdraw more tokens than
-               it is entitled to.
+           Attempt to transfer tokens to msg.sender.
+           Note: we are relying on the token contract to return a success bool (true for success). If this
+           bool is not implemented as expected it may be possible for an account to withdraw more tokens than
+           it is entitled to.
         */
         assert(tokenContract.call(bytes4(sha3('transfer(address,uint256)')), msg.sender, tokens));
         LogWithdrawTokens(msg.sender, tokens);

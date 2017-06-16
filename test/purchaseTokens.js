@@ -25,6 +25,7 @@ contract('TokenSyndicateFactory', function(accounts) {
     const investorAccount = accounts[0];
     const bountyHunterAccount = accounts[1];
     const unassociatedAccount = accounts[2];
+    const poorAccount = accounts[3];
     let tokenContract = null;
     let tokenContractAddress = null;
     let syndicateContract = null;
@@ -67,6 +68,15 @@ contract('TokenSyndicateFactory', function(accounts) {
     it("should throw if an investment will exceed the maximum investment allowed", function() {
         return syndicateContract.createPresaleInvestment(bountyPerKwei,
                 {from: investorAccount, value: valid.maxPresaleWeiAllowed*2})  // *2 is to make sure it's too high
+            .then(assert.fail)
+            .catch(function(error) {
+                assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
+            });
+    });
+
+    it("should throw if an investment is less than 1 kwei", function() {
+        return syndicateContract.createPresaleInvestment(bountyPerKwei,
+            {from: investorAccount, value: 999})
             .then(assert.fail)
             .catch(function(error) {
                 assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
