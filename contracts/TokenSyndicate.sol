@@ -8,7 +8,7 @@ contract TokenSyndicate {
     address public tokenContract;
     uint256 public tokenExchangeRate;
     uint256 public minBountyPerKwei;
-    uint256 public maxPresaleEthAllowed;
+    uint256 public maxPresaleWeiAllowed;
     uint256 public refundStartBlock;
     address public winner;
 
@@ -27,11 +27,11 @@ contract TokenSyndicate {
     address _tokenContract,
     uint256 _tokenExchangeRate,
     uint256 _minBountyPerKwei,
-    uint256 _maxPresaleEthAllowed,
+    uint256 _maxPresaleWeiAllowed,
     uint256 _refundStartBlock){
         assert(_minBountyPerKwei < kwei);       // do not allow a bounty of 100%.
         assert(_minBountyPerKwei > 0);          // do not allow a bounty of zero.
-        assert(_maxPresaleEthAllowed > 0);      // the eth allowed must be greater than zero.
+        assert(_maxPresaleWeiAllowed > 0);      // the eth allowed must be greater than zero.
         assert(_tokenContract != address(0));   // the token contract may not be at the zero address.
         assert(_tokenExchangeRate > 0);         // the token exchange rate must not be zero.
         assert(_refundStartBlock >= block.number);   // the refund start time must be now or later
@@ -39,7 +39,7 @@ contract TokenSyndicate {
         tokenContract = _tokenContract;
         tokenExchangeRate = _tokenExchangeRate;
         minBountyPerKwei = _minBountyPerKwei;
-        maxPresaleEthAllowed = _maxPresaleEthAllowed;
+        maxPresaleWeiAllowed = _maxPresaleWeiAllowed;
         refundStartBlock = _refundStartBlock;
 
         totalPresale = 0;
@@ -67,7 +67,7 @@ contract TokenSyndicate {
         presaleBalances[msg.sender] += final_presale;
         totalBounties += final_bounty;
         totalPresale += final_presale;
-        assert(totalPresale <= maxPresaleEthAllowed);
+        assert(totalPresale <= maxPresaleWeiAllowed);
         LogCreatePresaleInvestment(msg.sender, final_bounty, final_presale);       // create an event
     }
 

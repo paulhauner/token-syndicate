@@ -4,7 +4,7 @@ const valid = {
     tokenContract: 1,
     tokenExchangeRate: 20000,
     minBountyPerKwei: 250,
-    maxPresaleEthAllowed: 1000000,
+    maxPresaleWeiAllowed: 1000000,
     refundStartBlock: 1000
 };
 
@@ -12,7 +12,7 @@ contract('TokenSyndicateFactory', function(accounts) {
 
     const createValidSyndicate = function(factory) {
         return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minBountyPerKwei,
-            valid.maxPresaleEthAllowed, valid.refundStartBlock)
+            valid.maxPresaleWeiAllowed, valid.refundStartBlock)
             .then(function() {
                 return factory;
             })
@@ -23,7 +23,7 @@ contract('TokenSyndicateFactory', function(accounts) {
         return TokenSyndicateFactory.deployed()
             .then(function(factory) {
                 return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minBountyPerKwei,
-                    valid.maxPresaleEthAllowed, valid.refundStartBlock);
+                    valid.maxPresaleWeiAllowed, valid.refundStartBlock);
             })
             .then(function(tx) {
                 const log = tx.logs[0];
@@ -37,7 +37,7 @@ contract('TokenSyndicateFactory', function(accounts) {
             .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
             .then(function(factory) {
                 return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minBountyPerKwei,
-                    valid.maxPresaleEthAllowed, web3.eth.blockNumber - 1);
+                    valid.maxPresaleWeiAllowed, web3.eth.blockNumber - 1);
             })
             .then(() => assert.fail('creating a syndicate should not be successful.'))
             .catch(function(error) {
@@ -50,7 +50,7 @@ contract('TokenSyndicateFactory', function(accounts) {
             .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
             .then(function(factory) {
                 return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, 1000,
-                    valid.maxPresaleEthAllowed, valid.refundStartBlock);
+                    valid.maxPresaleWeiAllowed, valid.refundStartBlock);
             })
             .then(() => assert.fail('creating a syndicate should not be successful.'))
             .catch(function(error) {
@@ -63,7 +63,7 @@ contract('TokenSyndicateFactory', function(accounts) {
             .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
             .then(function(factory) {
                 return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, 0,
-                    valid.maxPresaleEthAllowed, valid.refundStartBlock);
+                    valid.maxPresaleWeiAllowed, valid.refundStartBlock);
             })
             .then(() => assert.fail('creating a syndicate should not be successful.'))
             .catch(function(error) {
@@ -89,7 +89,7 @@ contract('TokenSyndicateFactory', function(accounts) {
             .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
             .then(function(factory) {
                 return factory.createSyndicate(valid.tokenContract, 0, valid.minBountyPerKwei,
-                    valid.maxPresaleEthAllowed, valid.refundStartBlock);
+                    valid.maxPresaleWeiAllowed, valid.refundStartBlock);
             })
             .then(() => assert.fail('creating a syndicate should not be successful.'))
             .catch(function(error) {
@@ -102,7 +102,7 @@ contract('TokenSyndicateFactory', function(accounts) {
             .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
             .then(function(factory) {
                 return factory.createSyndicate(0, valid.tokenExchangeRate, valid.minBountyPerKwei,
-                    valid.maxPresaleEthAllowed, valid.refundStartBlock);
+                    valid.maxPresaleWeiAllowed, valid.refundStartBlock);
             })
             .then(() => assert.fail('creating a syndicate should not be successful.'))
             .catch(function(error) {

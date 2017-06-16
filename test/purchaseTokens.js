@@ -7,7 +7,7 @@ const valid = {
     tokenContract: 1,
     tokenExchangeRate: 6400,
     minBountyPerKwei: 250,
-    maxPresaleEthAllowed: 1000000,
+    maxPresaleWeiAllowed: 1000000,
 };
 
 const calculateTxFee = function(tx, gasPrice) {
@@ -51,7 +51,7 @@ contract('TokenSyndicateFactory', function(accounts) {
             .then(function(factory) {
                 // create a new token syndicate
                 return factory.createSyndicate(tokenContractAddress, valid.tokenExchangeRate, valid.minBountyPerKwei,
-                    valid.maxPresaleEthAllowed, web3.eth.blockNumber + 1);
+                    valid.maxPresaleWeiAllowed, web3.eth.blockNumber + 1);
             })
             .then(function(tx) {
                 // record the new token syndicate address
@@ -65,7 +65,7 @@ contract('TokenSyndicateFactory', function(accounts) {
 
     it("should throw if an investment will exceed the maximum investment allowed", function() {
         return syndicateContract.createPresaleInvestment(bountyPerKwei,
-                {from: investorAccount, value: valid.maxPresaleEthAllowed*2})  // *2 is to make sure it's too high
+                {from: investorAccount, value: valid.maxPresaleWeiAllowed*2})  // *2 is to make sure it's too high
             .then(assert.fail)
             .catch(function(error) {
                 assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
