@@ -23,6 +23,10 @@ contract TokenSyndicate {
     event LogWithdrawTokens(address indexed _to, uint256 tokens);
     event LogWithdrawBounty(address indexed _to, uint256 bounty);
 
+    modifier onlyWithoutWinner() { assert(winner == address(0));  _; }
+    modifier onlyWithWinner() { assert(winner != address(0)); _; }
+    modifier whenRefundIsPermitted() { assert(block.number >= refundStartBlock); _; }
+
     function TokenSyndicate(
     address _tokenContract,
     uint256 _tokenExchangeRate,
@@ -78,30 +82,6 @@ contract TokenSyndicate {
     */
     function balanceOf(address _owner) constant returns (uint256 presaleBalance, uint256 bountyBalance) {
         return (presaleBalances[_owner], bountyBalances[_owner]);
-    }
-
-    /*
-        If the 'winner' address is address(0), there has been no winner yet.
-    */
-    modifier onlyWithoutWinner() {
-        assert(winner == address(0));
-        _;
-    }
-
-    /*
-        If the 'winner' address is anything other than address(0), there has been a winner.
-    */
-    modifier onlyWithWinner() {
-        assert(winner != address(0));
-        _;
-    }
-
-    /*
-        Throw if our block number is less than the refund start block
-    */
-    modifier whenRefundIsPermitted() {
-        assert(block.number >= refundStartBlock);
-        _;
     }
 
 
