@@ -22,6 +22,7 @@ contract TokenSyndicate {
     event LogCreatePresaleInvestment(address indexed _to, uint256 bounty, uint256 presale);
     event LogRefundPresaleInvestment(address indexed _to, uint256 bounty, uint256 presale);
     event LogWithdrawTokens(address indexed _to, uint256 tokens);
+    event LogWithdrawBounty(address indexed _to, uint256 bounty);
 
     function TokenSyndicate(
     address _tokenContract,
@@ -113,7 +114,6 @@ contract TokenSyndicate {
 
         totalPresale = SafeMath.sub(totalPresale, presaleBalances[msg.sender]);
         presaleBalances[msg.sender] = 0;
-        LogWithdrawTokens(msg.sender, tokens);
 
         /*
                Attempt to transfer tokens to msg.sender.
@@ -122,10 +122,25 @@ contract TokenSyndicate {
                it is entitled to.
         */
         if(!tokenContract.call(bytes4(sha3('transfer(address,uint256)')), msg.sender, tokens)) throw;
+        LogWithdrawTokens(msg.sender, tokens);
     }
 
     /*
-        Refund a your investment and bounty.
+        Collect the bounty for successfully executing the token purchase.
+    */
+    function withdrawBounty() external onlyWithWinner {
+        assert(msg.sender == winner);
+        assert(totalBounties > 0);
+
+        uint256 entitlement = totalBounties;
+        totalBounties = 0;
+
+        msg.sender.transfer(entitlement);
+        LogWithdrawBounty(msg.sender, entitlement);
+    }
+
+    /*
+        Refund an accounts investment and bounty.
         This is only possible if there has not been a 'winner' (ie, if tokens have not been purchased).
     */
     function refundPresaleInvestment() external onlyWithoutWinner {

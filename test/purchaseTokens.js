@@ -12,6 +12,11 @@ const valid = {
     presaleEndBlock: 1000000000
 };
 
+const calculateTxFee = function(tx, gasPrice) {
+    gasPrice = gasPrice.times(5);       // i dont know why this is needed. potentially a testrpc bug?
+    return gasPrice.times(tx.receipt.cumulativeGasUsed);
+};
+
 contract('TokenSyndicateFactory', function(accounts) {
     const totalInvestmentInWei = 1100;
     const bountyPerKwei = 250;
@@ -128,6 +133,44 @@ contract('TokenSyndicateFactory', function(accounts) {
 
     it("should throw if an investor attempts to withdraw a second time", function() {
         return syndicateContract.withdrawTokens({from: investorAccount})
+            .then(assert.fail)
+            .catch(function(error) {
+                assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
+            });
+    });
+
+    it("should throw if an account which is not the winner tries to withdraw the bounty", function() {
+        return syndicateContract.withdrawBounty({from: investorAccount})
+            .then(assert.fail)
+            .catch(function(error) {
+                assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
+            });
+    });
+
+    it("should allow the winner to withdraw the bounty", function() {
+        const accountBalanceBeforeRefund = web3.eth.getBalance(bountyHunterAccount);
+        return syndicateContract.withdrawBounty({from: bountyHunterAccount})
+            .then(function(tx) {
+                const log = tx.logs[0];
+                assert(log.event === 'LogWithdrawBounty', 'an event should have been created');
+                assert(log.args._to === bountyHunterAccount, 'the event should reference the bounty hunter');
+                assert(
+                    log.args.bounty.toNumber() === bountyValue,
+                    `the bounty value in the event should match our expectation.`
+                );
+                const accountBalanceAfterRefund = web3.eth.getBalance(bountyHunterAccount);
+                const calculatedRefund = accountBalanceAfterRefund.minus(
+                    accountBalanceBeforeRefund.minus(calculateTxFee(tx, web3.eth.gasPrice))
+                );
+                assert(
+                    calculatedRefund.toNumber() === bountyValue,
+                    'the bounty hunters eth balance should have increased by the bounty value'
+                )
+            })
+    });
+
+    it("should not allow the winner to withdraw the bounty twice", function() {
+        return syndicateContract.withdrawBounty({from: bountyHunterAccount})
             .then(assert.fail)
             .catch(function(error) {
                 assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
