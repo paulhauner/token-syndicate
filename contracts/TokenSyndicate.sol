@@ -54,17 +54,17 @@ contract TokenSyndicate {
         Invest in this contract in order to have tokens purchased on your behalf when the buyTokens() contract
         is called without a `throw`.
     */
-    function createPresaleInvestment(uint256 bountyPerKwei) payable external {
-        if(block.number < presaleStartBlock) throw; // you must call within the block time bounds of the presale.
-        if(block.number > presaleEndBlock) throw;   // as above ^
-        if(bountyPerKwei < minBountyPerKwei) throw;       // you must provide a bounty/kw above or equal to the minimum bounty/kw.
-        if(msg.value == 0) throw;                   // you must provide some eth.
+    function createPresaleInvestment(uint256 _bountyPerKwei) payable external {
+        assert(block.number > presaleStartBlock);
+        assert(block.number < presaleEndBlock);
+        assert(_bountyPerKwei >= minBountyPerKwei);
+        assert(msg.value > 0);
 
         /*
             As the EVM does not currently support decimals, we are multiplying both msg.value and the bounty
             by 1000 before calculating the bounty ratio in order to gain a reasonable degree of precision.
         */
-        uint256 bountyWithKweiPrecision = SafeMath.div(SafeMath.mul(msg.value, kwei), SafeMath.mul(bountyPerKwei, kwei));
+        uint256 bountyWithKweiPrecision = SafeMath.div(SafeMath.mul(msg.value, kwei), SafeMath.mul(_bountyPerKwei, kwei));
         uint256 final_bounty = SafeMath.div(msg.value, bountyWithKweiPrecision);
         uint256 final_presale = SafeMath.sub(msg.value, final_bounty);
 
