@@ -15,8 +15,8 @@ const calculateTxFee = function(tx, gasPrice) {
     return gasPrice.times(tx.receipt.cumulativeGasUsed);
 };
 
-contract('TokenSyndicateFactory', function(accounts) {
-    const totalInvestmentInWei = 11003;
+contract('TokenSyndicate with BAT', function(accounts) {
+    const totalInvestmentInWei = 3301;
     const bountyPerKwei = 250;
     const bountyValue = Math.floor(totalInvestmentInWei*(bountyPerKwei/1000));
     const presaleValue = totalInvestmentInWei - bountyValue;
@@ -76,7 +76,7 @@ contract('TokenSyndicateFactory', function(accounts) {
 
     it("should throw if an investment is less than 1 kwei", function() {
         return syndicateContract.createPresaleInvestment(bountyPerKwei,
-            {from: investorAccount, value: 999})
+            {from: poorAccount, value: 999})
             .then(assert.fail)
             .catch(function(error) {
                 assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
