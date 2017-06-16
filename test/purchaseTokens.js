@@ -16,7 +16,7 @@ const calculateTxFee = function(tx, gasPrice) {
 };
 
 contract('TokenSyndicateFactory', function(accounts) {
-    const totalInvestmentInWei = 1100;
+    const totalInvestmentInWei = 11003;
     const bountyPerKwei = 250;
     const bountyValue = Math.floor(totalInvestmentInWei*(bountyPerKwei/1000));
     const presaleValue = totalInvestmentInWei - bountyValue;
@@ -60,7 +60,8 @@ contract('TokenSyndicateFactory', function(accounts) {
                 syndicateContract = TokenSyndicate.at(contractAddress);
                 // buy some presale tokens from investorAccount
                 return syndicateContract.createPresaleInvestment(bountyPerKwei, { from: investorAccount, value: totalInvestmentInWei})
-            });
+            })
+            .catch((error) => console.log(error));
     });
 
     it("should throw if an investment will exceed the maximum investment allowed", function() {
@@ -78,11 +79,11 @@ contract('TokenSyndicateFactory', function(accounts) {
                 const presale = balances[0].toString();
                 const bounty = balances[1].toString();
                 assert(
-                    parseInt(bounty) === (totalInvestmentInWei * (bountyPerKwei/1000)),
+                    parseInt(bounty) === Math.floor(totalInvestmentInWei * (bountyPerKwei/1000)),
                     'the account should have an accurate bounty value'
                 );
                 assert(
-                    parseInt(presale) === (totalInvestmentInWei - (totalInvestmentInWei * (bountyPerKwei/1000))),
+                    parseInt(presale) === (totalInvestmentInWei - Math.floor(totalInvestmentInWei * (bountyPerKwei/1000))),
                     'the account should have an accurate presale value'
                 );
             });

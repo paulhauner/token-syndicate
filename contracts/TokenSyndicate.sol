@@ -59,8 +59,9 @@ contract TokenSyndicate {
             As the EVM does not currently support decimals, we are multiplying both msg.value and the bounty
             by 1000 before calculating the bounty ratio in order to gain a reasonable degree of precision.
         */
-        uint256 bountyWithKweiPrecision = SafeMath.div(SafeMath.mul(msg.value, kwei), SafeMath.mul(_bountyPerKwei, kwei));
-        uint256 final_bounty = SafeMath.div(msg.value, bountyWithKweiPrecision);
+        uint256 msg_value_with_precision = SafeMath.mul(msg.value, kwei);
+        uint256 bounty_with_precision = SafeMath.mul(_bountyPerKwei, SafeMath.div(msg_value_with_precision, kwei));
+        uint256 final_bounty = SafeMath.div(bounty_with_precision, kwei);
         uint256 final_presale = SafeMath.sub(msg.value, final_bounty);
 
         bountyBalances[msg.sender] += final_bounty;
