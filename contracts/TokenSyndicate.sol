@@ -31,12 +31,12 @@ contract TokenSyndicate {
     uint256 _maxPresaleEthAllowed,
     uint256 _presaleStartBlock,
     uint256 _presaleEndBlock){
-        if (_minBountyPerKwei >= kwei) throw;  // you may not have a bounty of 100% or more.
-        if (_minBountyPerKwei == 0) throw;     // you must provide a bounty.
-        if (_maxPresaleEthAllowed == 0) throw;
-        if (_tokenContract == address(0)) throw;
-        if (_tokenExchangeRate == 0) throw;
-        if(_presaleStartBlock >= _presaleEndBlock) throw;     // the presale must start before it finishes.
+        assert(_minBountyPerKwei < kwei);       // do not allow a bounty of 100%.
+        assert(_minBountyPerKwei > 0);          // do not allow a bounty of zero.
+        assert(_maxPresaleEthAllowed > 0);      // the eth allowed must be greater than zero.
+        assert(_tokenContract != address(0));   // the token contract may not be at the zero address.
+        assert(_tokenExchangeRate > 0);         // the token exchange rate must not be zero.
+        assert(_presaleStartBlock < _presaleEndBlock);     // the presale must start before it ends.
 
         tokenContract = _tokenContract;
         tokenExchangeRate = _tokenExchangeRate;
