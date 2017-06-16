@@ -21,6 +21,7 @@ contract TokenSyndicate {
 
     event LogCreatePresaleInvestment(address indexed _to, uint256 bounty, uint256 presale);
     event LogRefundPresaleInvestment(address indexed _to, uint256 bounty, uint256 presale);
+    event LogWithdrawTokens(address indexed _to, uint256 tokens);
 
     function TokenSyndicate(
     address _tokenContract,
@@ -104,6 +105,23 @@ contract TokenSyndicate {
     function buyTokens() external onlyWithoutWinner {
         winner = msg.sender;
         if(!tokenContract.call.value(totalPresale)(bytes4(sha3("createTokens()")))) throw;
+    }
+
+    function withdrawTokens() onlyWithWinner {
+        uint256 tokens = SafeMath.mul(presaleBalances[msg.sender], tokenExchangeRate);
+        assert(tokens > 0);
+
+        totalPresale = SafeMath.sub(totalPresale, presaleBalances[msg.sender]);
+        presaleBalances[msg.sender] = 0;
+        LogWithdrawTokens(msg.sender, tokens);
+
+        /*
+               Attempt to transfer tokens to msg.sender.
+               Note: we are relying on the token contract to return a success bool (true for success). If this
+               bool is not implemented as expected it may be possible for an account to withdraw more tokens than
+               it is entitled to.
+        */
+        if(!tokenContract.call(bytes4(sha3('transfer(address,uint256)')), msg.sender, tokens)) throw;
     }
 
     /*
