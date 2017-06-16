@@ -3,7 +3,7 @@ const TokenSyndicate = artifacts.require("./TokenSyndicate.sol");
 
 const valid = {
     tokenContract: 1,
-    tokenExchangeRate: 20000,
+    tokenExchangeRate: 6400,
     minBountyPerKwei: 250,
     maxPresaleWeiAllowed: 1000000,
 };
@@ -76,6 +76,39 @@ contract('TokenSyndicate (refunds)', function(accounts) {
                     'the account balance of the investor should be credited the bounty+investment'
                 )
             })
+    });
+
+    it("should throw if an account attempts to withdraw before the withdraw block", function() {
+        const refundBlock = web3.eth.blockNumber + 100000;      // it is an arbitrary number which just needs to be high
+
+        return TokenSyndicateFactory.deployed()
+            .then(function(factory) {
+                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minBountyPerKwei,
+                    valid.maxPresaleWeiAllowed, refundBlock);
+            })
+            .then(function(tx) {
+                const log = tx.logs[0];
+                const contractAddress = log.args.newSyndicateAddress;
+                return TokenSyndicate.at(contractAddress);
+            })
+            .then(function(syndicate) {
+                return syndicate.createPresaleInvestment(bountyPerKwei, { from: accounts[1], value: totalInvestmentInWei})
+                    .then(function(tx) {
+                        assert(tx.logs[0].event === 'LogCreatePresaleInvestment', 'an event should be created');
+                        return syndicate;
+                    })
+            })
+            .then(function(syndicate) {
+                assert(
+                    web3.eth.blockNumber < refundBlock,
+                    'this test requires the block number to be lower than the refund start block'
+                );
+                return syndicate.refundPresaleInvestment({from: accounts[1]});
+            })
+            .then(() => assert.fail('it should not be possible to refund before the refund start block'))
+            .catch(function(error) {
+                assert(error.message.indexOf('invalid opcode') >= 0, error.actual)
+            });
     });
 
 });
