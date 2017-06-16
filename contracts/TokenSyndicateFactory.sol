@@ -14,15 +14,13 @@ contract TokenSyndicateFactory {
     uint256 _tokenExchangeRate,
     uint256 _minBountyPerKwei,
     uint256 _maxPresaleEthAllowed,
-    uint256 _presaleStartBlock,
-    uint256 _presaleEndBlock) returns (address newSyndicateAddress){
+    uint256 _refundStartBlock) returns (address newSyndicateAddress){
         TokenSyndicate newSyndicate = (new TokenSyndicate(
             _tokenContract,
             _tokenExchangeRate,
             _minBountyPerKwei,
             _maxPresaleEthAllowed,
-            _presaleStartBlock,
-            _presaleEndBlock));
+            _refundStartBlock));
         LogNewTokenSyndicate(address(newSyndicate));
         return newSyndicate;
     }

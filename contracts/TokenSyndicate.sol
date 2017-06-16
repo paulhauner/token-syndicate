@@ -9,8 +9,7 @@ contract TokenSyndicate {
     uint256 public tokenExchangeRate;
     uint256 public minBountyPerKwei;
     uint256 public maxPresaleEthAllowed;
-    uint256 public presaleStartBlock;
-    uint256 public presaleEndBlock;
+    uint256 public refundStartBlock;
     address public winner;
 
     uint256 public totalPresale;
@@ -29,21 +28,19 @@ contract TokenSyndicate {
     uint256 _tokenExchangeRate,
     uint256 _minBountyPerKwei,
     uint256 _maxPresaleEthAllowed,
-    uint256 _presaleStartBlock,
-    uint256 _presaleEndBlock){
+    uint256 _refundStartBlock){
         assert(_minBountyPerKwei < kwei);       // do not allow a bounty of 100%.
         assert(_minBountyPerKwei > 0);          // do not allow a bounty of zero.
         assert(_maxPresaleEthAllowed > 0);      // the eth allowed must be greater than zero.
         assert(_tokenContract != address(0));   // the token contract may not be at the zero address.
         assert(_tokenExchangeRate > 0);         // the token exchange rate must not be zero.
-        assert(_presaleStartBlock < _presaleEndBlock);     // the presale must start before it ends.
+        assert(_refundStartBlock >= block.number);   // the refund start time must be now or later
 
         tokenContract = _tokenContract;
         tokenExchangeRate = _tokenExchangeRate;
         minBountyPerKwei = _minBountyPerKwei;
         maxPresaleEthAllowed = _maxPresaleEthAllowed;
-        presaleStartBlock = _presaleStartBlock;
-        presaleEndBlock = _presaleEndBlock;
+        refundStartBlock = _refundStartBlock;
 
         totalPresale = 0;
         totalBounties = 0;
@@ -55,8 +52,6 @@ contract TokenSyndicate {
         is called without a `throw`.
     */
     function createPresaleInvestment(uint256 _bountyPerKwei) payable external {
-        assert(block.number > presaleStartBlock);
-        assert(block.number < presaleEndBlock);
         assert(_bountyPerKwei >= minBountyPerKwei);
         assert(msg.value > 0);
 
@@ -100,9 +95,18 @@ contract TokenSyndicate {
     }
 
     /*
-           Attempt to purchase the tokens from the token contract.
-           Whichever address manages to successfully purchase/create the tokens will be the 'winner'.
-           The 'winner' is allowed to withdraw the bounties from this contract.
+        Throw if our block number is less than the refund start block
+    */
+    modifier whenRefundIsPermitted() {
+        assert(block.number >= refundStartBlock);
+        _;
+    }
+
+
+    /*
+       Attempt to purchase the tokens from the token contract.
+       Whichever address manages to successfully purchase/create the tokens will be the 'winner'.
+       The 'winner' is allowed to withdraw the bounties from this contract.
     */
     function buyTokens() external onlyWithoutWinner {
         winner = msg.sender;
@@ -144,7 +148,7 @@ contract TokenSyndicate {
         Refund an accounts investment and bounty.
         This is only possible if there has not been a 'winner' (ie, if tokens have not been purchased).
     */
-    function refundPresaleInvestment() external onlyWithoutWinner {
+    function refundPresaleInvestment() external whenRefundIsPermitted {
         uint256 bountyValue = bountyBalances[msg.sender];
         uint256 presaleValue = presaleBalances[msg.sender];
         uint256 totalValue = SafeMath.add(bountyValue, presaleValue);

@@ -6,8 +6,6 @@ const valid = {
     tokenExchangeRate: 20000,
     minBountyPerKwei: 250,
     maxPresaleEthAllowed: 1000000,
-    presaleStartBlock: 0,
-    presaleEndBlock: 10000
 };
 
 const calculateTxFee = function(tx, gasPrice) {
@@ -26,7 +24,7 @@ contract('TokenSyndicateFactory', function(accounts) {
         return TokenSyndicateFactory.deployed()
             .then(function(factory) {
                 return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minBountyPerKwei,
-                    valid.maxPresaleEthAllowed, valid.presaleStartBlock, valid.presaleEndBlock);
+                    valid.maxPresaleEthAllowed, web3.eth.blockNumber + 1);
             })
             .then(function(tx) {
                 const log = tx.logs[0];
