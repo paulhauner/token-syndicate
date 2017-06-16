@@ -10,6 +10,11 @@ const valid = {
     presaleEndBlock: 10000
 };
 
+const calculateTxFee = function(tx, gasPrice) {
+    gasPrice = gasPrice.times(5);       // i dont know why this is needed. potentially a testrpc bug?
+    return gasPrice.times(tx.receipt.cumulativeGasUsed);
+};
+
 contract('TokenSyndicateFactory', function(accounts) {
     let contract = null;
 
@@ -66,10 +71,7 @@ contract('TokenSyndicateFactory', function(accounts) {
                 const accountBalanceAfterRefund = web3.eth.getBalance(accounts[0]);
                 const txCalced = accountBalanceAfterRefund.minus(accountBalanceBeforeRefund.plus(totalInvestmentInWei));
 
-                let gasPrice = web3.eth.gasPrice;
-                gasPrice = gasPrice.dividedBy(2);       // for some reason this is necessary.. testrpc bug?
-                gasPrice = gasPrice.times(10);          // this is also necessary.. need to figure out it's about
-                const txFee = gasPrice.times(tx.receipt.cumulativeGasUsed);
+                const txFee = calculateTxFee(tx, web3.eth.gasPrice);
                 const predictedBalance = accountBalanceBeforeRefund.minus(txFee).plus(totalInvestmentInWei);
                 assert(
                     accountBalanceAfterRefund.equals(predictedBalance),
