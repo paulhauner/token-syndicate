@@ -51,6 +51,16 @@ contract TokenSyndicate {
     }
 
     /*
+       Attempt to purchase the tokens from the token contract.
+       Whichever address manages to successfully purchase/create the tokens will be the 'winner'.
+       The 'winner' is allowed to withdraw the bounties from this contract.
+    */
+    function buyTokens() external onlyWithoutWinner {
+        winner = msg.sender;
+        assert(tokenContract.call.value(totalPresale)(bytes4(sha3("createTokens()"))));
+    }
+
+    /*
         Invest in this contract in order to have tokens purchased on your behalf when the buyTokens() contract
         is called without a `throw`.
     */
@@ -84,16 +94,10 @@ contract TokenSyndicate {
         return (presaleBalances[_owner], bountyBalances[_owner]);
     }
 
-
     /*
-       Attempt to purchase the tokens from the token contract.
-       Whichever address manages to successfully purchase/create the tokens will be the 'winner'.
-       The 'winner' is allowed to withdraw the bounties from this contract.
+        Transfer an accounts token entitlement to itself.
+        This can only be called if there has been a 'winner'.
     */
-    function buyTokens() external onlyWithoutWinner {
-        winner = msg.sender;
-        assert(tokenContract.call.value(totalPresale)(bytes4(sha3("createTokens()"))));
-    }
 
     function withdrawTokens() onlyWithWinner {
         uint256 tokens = SafeMath.mul(presaleBalances[msg.sender], tokenExchangeRate);
