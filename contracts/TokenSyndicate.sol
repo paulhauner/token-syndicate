@@ -32,13 +32,12 @@ contract TokenSyndicate {
     uint256 _tokenExchangeRate,
     uint256 _minBountyPerKwei,
     uint256 _maxPresaleWeiAllowed,
-    uint256 _refundStartBlock){
+    uint256 _refundStartBlock) {
         assert(_minBountyPerKwei < kwei);       // do not allow a bounty of 100%.
         assert(_minBountyPerKwei > 0);          // do not allow a bounty of zero.
         assert(_maxPresaleWeiAllowed > 0);      // the eth allowed must be greater than zero.
         assert(_tokenContract != address(0));   // the token contract may not be at the zero address.
         assert(_tokenExchangeRate > 0);         // the token exchange rate must not be zero.
-        assert(_refundStartBlock >= block.number);   // the refund start time must be now or later
 
         tokenContract = _tokenContract;
         tokenExchangeRate = _tokenExchangeRate;

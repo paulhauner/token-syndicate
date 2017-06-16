@@ -32,19 +32,6 @@ contract('TokenSyndicateFactory (syndicate construction)', function(accounts) {
             });
     });
 
-    it("should throw if syndicates finish before they start", function() {
-        return TokenSyndicateFactory.deployed()
-            .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
-            .then(function(factory) {
-                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minBountyPerKwei,
-                    valid.maxPresaleWeiAllowed, web3.eth.blockNumber - 1);
-            })
-            .then(() => assert.fail('creating a syndicate should not be successful.'))
-            .catch(function(error) {
-                assert(error.message.indexOf('out of gas') >= 0, error.actual)
-            });
-    });
-
     it("should throw if bounties are too high", function() {
         return TokenSyndicateFactory.deployed()
             .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
