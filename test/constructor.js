@@ -8,7 +8,7 @@ const valid = {
     refundStartBlock: 1000
 };
 
-contract('TokenSyndicateFactory', function(accounts) {
+contract('TokenSyndicateFactory (syndicate construction)', function(accounts) {
 
     const createValidSyndicate = function(factory) {
         return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minBountyPerKwei,

@@ -15,7 +15,7 @@ const calculateTxFee = function(tx, gasPrice) {
     return gasPrice.times(tx.receipt.cumulativeGasUsed);
 };
 
-contract('TokenSyndicate with BAT', function(accounts) {
+contract('TokenSyndicate (used with the BAT contract)', function(accounts) {
     const totalInvestmentInWei = 3301;
     const bountyPerKwei = 250;
     const bountyValue = Math.floor(totalInvestmentInWei*(bountyPerKwei/1000));

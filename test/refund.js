@@ -13,7 +13,7 @@ const calculateTxFee = function(tx, gasPrice) {
     return gasPrice.times(tx.receipt.cumulativeGasUsed);
 };
 
-contract('TokenSyndicateFactory', function(accounts) {
+contract('TokenSyndicate (refunds)', function(accounts) {
     let contract = null;
 
     /**
