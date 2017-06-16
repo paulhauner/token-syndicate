@@ -106,7 +106,7 @@ contract TokenSyndicate {
     */
     function buyTokens() external onlyWithoutWinner {
         winner = msg.sender;
-        if(!tokenContract.call.value(totalPresale)(bytes4(sha3("createTokens()")))) throw;
+        assert(tokenContract.call.value(totalPresale)(bytes4(sha3("createTokens()"))));
     }
 
     function withdrawTokens() onlyWithWinner {
@@ -122,7 +122,7 @@ contract TokenSyndicate {
                bool is not implemented as expected it may be possible for an account to withdraw more tokens than
                it is entitled to.
         */
-        if(!tokenContract.call(bytes4(sha3('transfer(address,uint256)')), msg.sender, tokens)) throw;
+        assert(tokenContract.call(bytes4(sha3('transfer(address,uint256)')), msg.sender, tokens));
         LogWithdrawTokens(msg.sender, tokens);
     }
 
@@ -149,8 +149,8 @@ contract TokenSyndicate {
         uint256 presaleValue = presaleBalances[msg.sender];
         uint256 totalValue = SafeMath.add(bountyValue, presaleValue);
 
-        if(bountyValue == 0) throw;
-        if(presaleValue == 0) throw;
+        assert(bountyValue > 0);
+        assert(presaleValue > 0);
 
         bountyBalances[msg.sender] = 0;
         presaleBalances[msg.sender] = 0;
