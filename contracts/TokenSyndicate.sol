@@ -64,10 +64,11 @@ contract TokenSyndicate {
         uint256 final_bounty = SafeMath.div(bounty_with_precision, kwei);
         uint256 final_presale = SafeMath.sub(msg.value, final_bounty);
 
-        bountyBalances[msg.sender] += final_bounty;
-        presaleBalances[msg.sender] += final_presale;
-        totalBounties += final_bounty;
-        totalPresale += final_presale;
+
+        bountyBalances[msg.sender] = SafeMath.add(bountyBalances[msg.sender], final_bounty);
+        presaleBalances[msg.sender] = SafeMath.add(presaleBalances[msg.sender], final_presale);
+        totalBounties = SafeMath.add(totalBounties, final_bounty);
+        totalPresale = SafeMath.add(totalPresale, final_presale);
         assert(totalPresale <= maxPresaleWeiAllowed);
         LogCreatePresaleInvestment(msg.sender, final_bounty, final_presale);       // create an event
     }
