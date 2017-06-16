@@ -72,6 +72,7 @@ contract TokenSyndicate {
         presaleBalances[msg.sender] += final_presale;
         totalBounties += final_bounty;
         totalPresale += final_presale;
+        assert(totalPresale <= maxPresaleEthAllowed);
         LogCreatePresaleInvestment(msg.sender, final_bounty, final_presale);       // create an event
     }
 

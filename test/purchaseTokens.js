@@ -65,6 +65,15 @@ contract('TokenSyndicateFactory', function(accounts) {
             });
     });
 
+    it("should throw if an investment will exceed the maximum investment allowed", function() {
+        return syndicateContract.createPresaleInvestment(bountyPerKwei,
+                {from: investorAccount, value: valid.maxPresaleEthAllowed*2})  // *2 is to make sure it's too high
+            .then(assert.fail)
+            .catch(function(error) {
+                assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
+            });
+    });
+
     it("should report valid account balances after investment", function() {
         return syndicateContract.balanceOf.call(investorAccount)
             .then(function(balances) {
