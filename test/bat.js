@@ -22,13 +22,19 @@ contract('TokenSyndicate (used with the BAT contract)', function(accounts) {
     const presaleValue = totalInvestmentInWei - bountyValue;
     const batContractExchangeRate = valid.tokenExchangeRate;
     const tokensExpected = presaleValue * batContractExchangeRate;
+    const donationWei = 1000000;
     const investorAccount = accounts[0];
     const bountyHunterAccount = accounts[1];
     const unassociatedAccount = accounts[2];
     const poorAccount = accounts[3];
+    const donatorAccount = accounts[4];
     let tokenContract = null;
     let tokenContractAddress = null;
     let syndicateContract = null;
+
+    // For our testing we need to make sure all of these addresses are different
+    assert(investorAccount !== bountyHunterAccount
+            !== unassociatedAccount !== poorAccount !== donatorAccount);
 
     /**
      * Create a token factory, use it to create a new syndicate and set the `contract`
@@ -66,6 +72,14 @@ contract('TokenSyndicate (used with the BAT contract)', function(accounts) {
                 const log = tx.logs[0];
                 assert(log.event === 'LogInvest', 'a LogInvest event should be created after investment');
             });
+    });
+
+    it("should allow donations", function() {
+        return syndicateContract.donate({from: donatorAccount, value: donationWei})
+            .then(function(tx) {
+                const log = tx.logs[0];
+                assert(log.event === 'LogDonate', 'a donate event should have been created')
+            })
     });
 
     it("should throw if an investment will exceed the maximum investment allowed", function() {
@@ -122,6 +136,14 @@ contract('TokenSyndicate (used with the BAT contract)', function(accounts) {
             });
     });
 
+    it("should throw if a donator attempts to refund after a winner has been determined", function() {
+        return syndicateContract.refund({from: donatorAccount})
+            .then(assert.fail)
+            .catch(function(error) {
+                assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
+            });
+    });
+
     it("should throw if an account which has not invested attempts to withdraw", function() {
         return syndicateContract.withdrawTokens({from: unassociatedAccount})
             .then(assert.fail)
@@ -169,13 +191,14 @@ contract('TokenSyndicate (used with the BAT contract)', function(accounts) {
 
     it("should allow the winner to withdraw the bounty", function() {
         const accountBalanceBeforeRefund = web3.eth.getBalance(bountyHunterAccount);
+        const totalExpectedBounty = bountyValue + donationWei;
         return syndicateContract.withdrawBounty({from: bountyHunterAccount})
             .then(function(tx) {
                 const log = tx.logs[0];
                 assert(log.event === 'LogWithdrawBounty', 'an event should have been created');
                 assert(log.args._to === bountyHunterAccount, 'the event should reference the bounty hunter');
                 assert(
-                    log.args.bounty.toNumber() === bountyValue,
+                    log.args.bounty.toNumber() === (totalExpectedBounty),
                     `the bounty value in the event should match our expectation.`
                 );
                 const accountBalanceAfterRefund = web3.eth.getBalance(bountyHunterAccount);
@@ -183,7 +206,7 @@ contract('TokenSyndicate (used with the BAT contract)', function(accounts) {
                     accountBalanceBeforeRefund.minus(calculateTxFee(tx, web3.eth.gasPrice))
                 );
                 assert(
-                    calculatedRefund.toNumber() === bountyValue,
+                    calculatedRefund.toNumber() === totalExpectedBounty,
                     'the bounty hunters eth balance should have increased by the bounty value'
                 )
             })

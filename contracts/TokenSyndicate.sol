@@ -19,6 +19,7 @@ contract TokenSyndicate {
     mapping(address => uint256) public bountyBalances;
 
     event LogInvest(address indexed _to, uint256 bounty, uint256 presale);
+    event LogDonate(address indexed _to, uint256 donation);
     event LogRefund(address indexed _to, uint256 bounty, uint256 presale);
     event LogWithdrawTokens(address indexed _to, uint256 tokens);
     event LogWithdrawBounty(address indexed _to, uint256 bounty);
@@ -93,6 +94,7 @@ contract TokenSyndicate {
         assert(msg.value > 0);
         bountyBalances[msg.sender] = SafeMath.add(bountyBalances[msg.sender], msg.value);
         totalBounties = SafeMath.add(totalBounties, msg.value);
+        LogDonate(msg.sender, msg.value);
     }
 
     /*
@@ -142,13 +144,12 @@ contract TokenSyndicate {
         Refund an accounts investment and bounty.
         This is only possible if there has not been a 'winner' (ie, if tokens have not been purchased).
     */
-    function refund() external whenRefundIsPermitted {
+    function refund() external whenRefundIsPermitted onlyWithoutWinner {
         uint256 bountyValue = bountyBalances[msg.sender];
         uint256 presaleValue = presaleBalances[msg.sender];
         uint256 totalValue = SafeMath.add(bountyValue, presaleValue);
 
-        assert(bountyValue > 0);
-        assert(presaleValue > 0);
+        assert(totalValue > 0);
 
         bountyBalances[msg.sender] = 0;
         presaleBalances[msg.sender] = 0;

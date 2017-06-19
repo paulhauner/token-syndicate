@@ -15,6 +15,9 @@ const calculateTxFee = function(tx, gasPrice) {
 
 contract('TokenSyndicate (refunds)', function(accounts) {
     let contract = null;
+    const investorAccount = accounts[0];
+    const donatorAccount = accounts[1];
+    const donationWei = 100000;
 
     /**
      * Create a token factory, use it to create a new syndicate and set the `contract`
@@ -37,14 +40,22 @@ contract('TokenSyndicate (refunds)', function(accounts) {
     const bountyPerKwei = 250;
 
     it("should allow presale investment if supplied enough eth and a valid bounty", function() {
-        return contract.invest({ from: accounts[0], value: totalInvestmentInWei})
+        return contract.invest({ from: investorAccount, value: totalInvestmentInWei})
             .then(function(tx) {
                 assert(tx.logs[0].event === 'LogInvest', 'an event should be created');
             })
     });
 
+    it("should allow donations", function() {
+        return contract.donate({from: donatorAccount, value: donationWei})
+            .then(function(tx) {
+                const log = tx.logs[0];
+                assert(log.event === 'LogDonate', 'a donate event should have been created')
+            })
+    });
+
     it("should report valid account balances", function() {
-        return contract.balanceOf.call(accounts[0])
+        return contract.balanceOf.call(investorAccount)
             .then(function(balances) {
                 const presale = balances[0].toString();
                 const bounty = balances[1].toString();
@@ -60,20 +71,35 @@ contract('TokenSyndicate (refunds)', function(accounts) {
     });
 
     it("should allow a full refund for an investor if there has been no winner", function() {
-        const accountBalanceBeforeRefund = web3.eth.getBalance(accounts[0]);
+        const accountBalanceBeforeRefund = web3.eth.getBalance(investorAccount);
 
-        return contract.refund({from: accounts[0]})
+        return contract.refund({from: investorAccount})
             .then(function(tx) {
                 assert(tx.logs[0].event === 'LogRefund', 'an event should be created');
 
-                const accountBalanceAfterRefund = web3.eth.getBalance(accounts[0]);
-                const txCalced = accountBalanceAfterRefund.minus(accountBalanceBeforeRefund.plus(totalInvestmentInWei));
-
+                const accountBalanceAfterRefund = web3.eth.getBalance(investorAccount);
                 const txFee = calculateTxFee(tx, web3.eth.gasPrice);
                 const predictedBalance = accountBalanceBeforeRefund.minus(txFee).plus(totalInvestmentInWei);
                 assert(
                     accountBalanceAfterRefund.equals(predictedBalance),
-                    'the account balance of the investor should be credited the bounty+investment'
+                    'the account balance of the investor should be credited the refunded bounty & presale'
+                )
+            })
+    });
+
+    it("should allow a full refund for a donator if there has been no winner", function() {
+        const accountBalanceBeforeRefund = web3.eth.getBalance(donatorAccount);
+
+        return contract.refund({from: donatorAccount})
+            .then(function(tx) {
+                assert(tx.logs[0].event === 'LogRefund', 'an event should be created');
+
+                const accountBalanceAfterRefund = web3.eth.getBalance(donatorAccount);
+                const txFee = calculateTxFee(tx, web3.eth.gasPrice);
+                const predictedBalance = accountBalanceBeforeRefund.minus(txFee).plus(donationWei);
+                assert(
+                    accountBalanceAfterRefund.equals(predictedBalance),
+                    'the account balance of the donator should be credited the refunded bounty'
                 )
             })
     });
