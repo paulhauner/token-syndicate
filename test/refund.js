@@ -37,9 +37,9 @@ contract('TokenSyndicate (refunds)', function(accounts) {
     const bountyPerKwei = 250;
 
     it("should allow presale investment if supplied enough eth and a valid bounty", function() {
-        return contract.createPresaleInvestment(bountyPerKwei, { from: accounts[0], value: totalInvestmentInWei})
+        return contract.invest({ from: accounts[0], value: totalInvestmentInWei})
             .then(function(tx) {
-                assert(tx.logs[0].event === 'LogCreatePresaleInvestment', 'an event should be created');
+                assert(tx.logs[0].event === 'LogInvest', 'an event should be created');
             })
     });
 
@@ -62,9 +62,9 @@ contract('TokenSyndicate (refunds)', function(accounts) {
     it("should allow a full refund for an investor if there has been no winner", function() {
         const accountBalanceBeforeRefund = web3.eth.getBalance(accounts[0]);
 
-        return contract.refundPresaleInvestment({from: accounts[0]})
+        return contract.refund({from: accounts[0]})
             .then(function(tx) {
-                assert(tx.logs[0].event === 'LogRefundPresaleInvestment', 'an event should be created');
+                assert(tx.logs[0].event === 'LogRefund', 'an event should be created');
 
                 const accountBalanceAfterRefund = web3.eth.getBalance(accounts[0]);
                 const txCalced = accountBalanceAfterRefund.minus(accountBalanceBeforeRefund.plus(totalInvestmentInWei));
@@ -92,9 +92,9 @@ contract('TokenSyndicate (refunds)', function(accounts) {
                 return TokenSyndicate.at(contractAddress);
             })
             .then(function(syndicate) {
-                return syndicate.createPresaleInvestment(bountyPerKwei, { from: accounts[1], value: totalInvestmentInWei})
+                return syndicate.invest({ from: accounts[1], value: totalInvestmentInWei})
                     .then(function(tx) {
-                        assert(tx.logs[0].event === 'LogCreatePresaleInvestment', 'an event should be created');
+                        assert(tx.logs[0].event === 'LogInvest', 'an event should be created');
                         return syndicate;
                     })
             })
@@ -103,7 +103,7 @@ contract('TokenSyndicate (refunds)', function(accounts) {
                     web3.eth.blockNumber < refundBlock,
                     'this test requires the block number to be lower than the refund start block'
                 );
-                return syndicate.refundPresaleInvestment({from: accounts[1]});
+                return syndicate.refund({from: accounts[1]});
             })
             .then(() => assert.fail('it should not be possible to refund before the refund start block'))
             .catch(function(error) {

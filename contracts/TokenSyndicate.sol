@@ -7,7 +7,7 @@ contract TokenSyndicate {
 
     address public tokenContract;
     uint256 public tokenExchangeRate;
-    uint256 public minBountyPerKwei;
+    uint256 public bountyPerKwei;
     uint256 public maxPresaleWeiAllowed;
     uint256 public refundStartBlock;
     address public winner;
@@ -18,8 +18,8 @@ contract TokenSyndicate {
     mapping(address => uint256) public presaleBalances;
     mapping(address => uint256) public bountyBalances;
 
-    event LogCreatePresaleInvestment(address indexed _to, uint256 bounty, uint256 presale);
-    event LogRefundPresaleInvestment(address indexed _to, uint256 bounty, uint256 presale);
+    event LogInvest(address indexed _to, uint256 bounty, uint256 presale);
+    event LogRefund(address indexed _to, uint256 bounty, uint256 presale);
     event LogWithdrawTokens(address indexed _to, uint256 tokens);
     event LogWithdrawBounty(address indexed _to, uint256 bounty);
 
@@ -30,18 +30,18 @@ contract TokenSyndicate {
     function TokenSyndicate(
     address _tokenContract,
     uint256 _tokenExchangeRate,
-    uint256 _minBountyPerKwei,
+    uint256 _bountyPerKwei,
     uint256 _maxPresaleWeiAllowed,
     uint256 _refundStartBlock) {
-        assert(_minBountyPerKwei < kwei);       // do not allow a bounty of 100%.
-        assert(_minBountyPerKwei > 0);          // do not allow a bounty of zero.
+        assert(_bountyPerKwei < kwei);       // do not allow a bounty of 100%.
+        assert(_bountyPerKwei > 0);          // do not allow a bounty of zero.
         assert(_maxPresaleWeiAllowed > 0);      // the eth allowed must be greater than zero.
         assert(_tokenContract != address(0));   // the token contract may not be at the zero address.
         assert(_tokenExchangeRate > 0);         // the token exchange rate must not be zero.
 
         tokenContract = _tokenContract;
         tokenExchangeRate = _tokenExchangeRate;
-        minBountyPerKwei = _minBountyPerKwei;
+        bountyPerKwei = _bountyPerKwei;
         maxPresaleWeiAllowed = _maxPresaleWeiAllowed;
         refundStartBlock = _refundStartBlock;
 
@@ -64,8 +64,7 @@ contract TokenSyndicate {
         Invest in this contract in order to have tokens purchased on your behalf when the buyTokens() contract
         is called without a `throw`.
     */
-    function createPresaleInvestment(uint256 _bountyPerKwei) payable external {
-        assert(_bountyPerKwei >= minBountyPerKwei);
+    function invest() payable external {
         assert(msg.value > 0);
         assert(msg.value >= kwei);  // this is a naive (but cheap) method of ensuring the bounty is always >= 1
 
@@ -74,7 +73,7 @@ contract TokenSyndicate {
             by 1000 before calculating the bounty ratio in order to gain a reasonable degree of precision.
         */
         uint256 msg_value_with_precision = SafeMath.mul(msg.value, kwei);
-        uint256 bounty_with_precision = SafeMath.mul(_bountyPerKwei, SafeMath.div(msg_value_with_precision, kwei));
+        uint256 bounty_with_precision = SafeMath.mul(bountyPerKwei, SafeMath.div(msg_value_with_precision, kwei));
         uint256 final_bounty = SafeMath.div(bounty_with_precision, kwei);
         uint256 final_presale = SafeMath.sub(msg.value, final_bounty);
 
@@ -83,7 +82,17 @@ contract TokenSyndicate {
         totalBounties = SafeMath.add(totalBounties, final_bounty);
         totalPresale = SafeMath.add(totalPresale, final_presale);
         assert(totalPresale <= maxPresaleWeiAllowed);
-        LogCreatePresaleInvestment(msg.sender, final_bounty, final_presale);       // create an event
+        LogInvest(msg.sender, final_bounty, final_presale);       // create an event
+    }
+
+    /*
+        Contribute to the bounty.
+        This will not result in the purchase of more tokens, it will simply increase the bounty.
+    */
+    function donate() payable external onlyWithoutWinner {
+        assert(msg.value > 0);
+        bountyBalances[msg.sender] = SafeMath.add(bountyBalances[msg.sender], msg.value);
+        totalBounties = SafeMath.add(totalBounties, msg.value);
     }
 
     /*
@@ -133,7 +142,7 @@ contract TokenSyndicate {
         Refund an accounts investment and bounty.
         This is only possible if there has not been a 'winner' (ie, if tokens have not been purchased).
     */
-    function refundPresaleInvestment() external whenRefundIsPermitted {
+    function refund() external whenRefundIsPermitted {
         uint256 bountyValue = bountyBalances[msg.sender];
         uint256 presaleValue = presaleBalances[msg.sender];
         uint256 totalValue = SafeMath.add(bountyValue, presaleValue);
@@ -146,7 +155,7 @@ contract TokenSyndicate {
         totalBounties = SafeMath.sub(totalBounties, bountyValue);
         totalPresale = SafeMath.sub(totalPresale, presaleValue);
         msg.sender.transfer(totalValue);
-        LogRefundPresaleInvestment(msg.sender, bountyValue, presaleValue);
+        LogRefund(msg.sender, bountyValue, presaleValue);
     }
 }
 

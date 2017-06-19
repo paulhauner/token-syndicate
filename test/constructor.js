@@ -3,7 +3,7 @@ const TokenSyndicateFactory = artifacts.require("./TokenSyndicateFactory.sol");
 const valid = {
     tokenContract: 1,
     tokenExchangeRate: 20000,
-    minBountyPerKwei: 250,
+    bountyPerKwei: 250,
     maxPresaleWeiAllowed: 1000000,
     refundStartBlock: 1000
 };
@@ -11,7 +11,7 @@ const valid = {
 contract('TokenSyndicateFactory (syndicate construction)', function(accounts) {
 
     const createValidSyndicate = function(factory) {
-        return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minBountyPerKwei,
+        return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.bountyPerKwei,
             valid.maxPresaleWeiAllowed, valid.refundStartBlock)
             .then(function() {
                 return factory;
@@ -22,7 +22,7 @@ contract('TokenSyndicateFactory (syndicate construction)', function(accounts) {
     it("should create new syndicates", function() {
         return TokenSyndicateFactory.deployed()
             .then(function(factory) {
-                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minBountyPerKwei,
+                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.bountyPerKwei,
                     valid.maxPresaleWeiAllowed, valid.refundStartBlock);
             })
             .then(function(tx) {
@@ -45,11 +45,26 @@ contract('TokenSyndicateFactory (syndicate construction)', function(accounts) {
             });
     });
 
-    it("should throw if bounties are too low", function() {
+    it("should throw if the bounty rate is too low", function() {
+        const invalidBounty = 0;
         return TokenSyndicateFactory.deployed()
             .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
             .then(function(factory) {
-                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, 0,
+                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, invalidBounty,
+                    valid.maxPresaleWeiAllowed, valid.refundStartBlock);
+            })
+            .then(() => assert.fail('creating a syndicate should not be successful.'))
+            .catch(function(error) {
+                assert(error.message.indexOf('out of gas') >= 0, error.actual)
+            });
+    });
+
+    it("should throw if the bounty rate is too high", function() {
+        const invalidBounty = 1000;
+        return TokenSyndicateFactory.deployed()
+            .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
+            .then(function(factory) {
+                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, invalidBounty,
                     valid.maxPresaleWeiAllowed, valid.refundStartBlock);
             })
             .then(() => assert.fail('creating a syndicate should not be successful.'))
@@ -62,7 +77,7 @@ contract('TokenSyndicateFactory (syndicate construction)', function(accounts) {
         return TokenSyndicateFactory.deployed()
             .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
             .then(function(factory) {
-                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.minBountyPerKwei,
+                return factory.createSyndicate(valid.tokenContract, valid.tokenExchangeRate, valid.bountyPerKwei,
                     0, valid.refundStartBlock);
             })
             .then(() => assert.fail('creating a syndicate should not be successful.'))
@@ -75,7 +90,7 @@ contract('TokenSyndicateFactory (syndicate construction)', function(accounts) {
         return TokenSyndicateFactory.deployed()
             .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
             .then(function(factory) {
-                return factory.createSyndicate(valid.tokenContract, 0, valid.minBountyPerKwei,
+                return factory.createSyndicate(valid.tokenContract, 0, valid.bountyPerKwei,
                     valid.maxPresaleWeiAllowed, valid.refundStartBlock);
             })
             .then(() => assert.fail('creating a syndicate should not be successful.'))
@@ -88,7 +103,7 @@ contract('TokenSyndicateFactory (syndicate construction)', function(accounts) {
         return TokenSyndicateFactory.deployed()
             .then((factory) => createValidSyndicate(factory))       // test to ensure a valid syndicate can be deployed
             .then(function(factory) {
-                return factory.createSyndicate(0, valid.tokenExchangeRate, valid.minBountyPerKwei,
+                return factory.createSyndicate(0, valid.tokenExchangeRate, valid.bountyPerKwei,
                     valid.maxPresaleWeiAllowed, valid.refundStartBlock);
             })
             .then(() => assert.fail('creating a syndicate should not be successful.'))

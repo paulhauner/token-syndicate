@@ -6,7 +6,7 @@ const BAToken = artifacts.require("./BAT/BAToken.sol");
 const valid = {
     tokenContract: 1,
     tokenExchangeRate: 6400,
-    minBountyPerKwei: 250,
+    bountyPerKwei: 250,
     maxPresaleWeiAllowed: 1000000,
 };
 
@@ -17,7 +17,7 @@ const calculateTxFee = function(tx, gasPrice) {
 
 contract('TokenSyndicate (used with the BAT contract)', function(accounts) {
     const totalInvestmentInWei = 3301;
-    const bountyPerKwei = 250;
+    const bountyPerKwei = valid.bountyPerKwei;
     const bountyValue = Math.floor(totalInvestmentInWei*(bountyPerKwei/1000));
     const presaleValue = totalInvestmentInWei - bountyValue;
     const batContractExchangeRate = valid.tokenExchangeRate;
@@ -51,23 +51,26 @@ contract('TokenSyndicate (used with the BAT contract)', function(accounts) {
             })
             .then(function(factory) {
                 // create a new token syndicate
-                return factory.createSyndicate(tokenContractAddress, valid.tokenExchangeRate, valid.minBountyPerKwei,
+                return factory.createSyndicate(tokenContractAddress, valid.tokenExchangeRate, valid.bountyPerKwei,
                     valid.maxPresaleWeiAllowed, web3.eth.blockNumber + 1);
             })
             .then(function(tx) {
-                // record the new token syndicate address
+                // () => record the new token syndicate address
                 const log = tx.logs[0];
                 const contractAddress = log.args.newSyndicateAddress;
                 syndicateContract = TokenSyndicate.at(contractAddress);
                 // buy some presale tokens from investorAccount
-                return syndicateContract.createPresaleInvestment(bountyPerKwei, { from: investorAccount, value: totalInvestmentInWei})
+                return syndicateContract.invest(bountyPerKwei, { from: investorAccount, value: totalInvestmentInWei})
             })
-            .catch((error) => console.log(error));
+            .then(function(tx) {
+                const log = tx.logs[0];
+                assert(log.event === 'LogInvest', 'a LogInvest event should be created after investment');
+            });
     });
 
     it("should throw if an investment will exceed the maximum investment allowed", function() {
-        return syndicateContract.createPresaleInvestment(bountyPerKwei,
-                {from: investorAccount, value: valid.maxPresaleWeiAllowed*2})  // *2 is to make sure it's too high
+        return syndicateContract.invest(
+            {from: investorAccount, value: valid.maxPresaleWeiAllowed*2})  // *2 is to make sure it's too high
             .then(assert.fail)
             .catch(function(error) {
                 assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
@@ -75,8 +78,7 @@ contract('TokenSyndicate (used with the BAT contract)', function(accounts) {
     });
 
     it("should throw if an investment is less than 1 kwei", function() {
-        return syndicateContract.createPresaleInvestment(bountyPerKwei,
-            {from: poorAccount, value: 999})
+        return syndicateContract.invest({from: poorAccount, value: 999})
             .then(assert.fail)
             .catch(function(error) {
                 assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')
@@ -113,7 +115,7 @@ contract('TokenSyndicate (used with the BAT contract)', function(accounts) {
     });
 
     it("should throw if an investor attempts to refund after a winner has been determined", function() {
-        return syndicateContract.refundPresaleInvestment({from: investorAccount})
+        return syndicateContract.refund({from: investorAccount})
             .then(assert.fail)
             .catch(function(error) {
                 assert(error.message.indexOf('invalid opcode') >= 0, 'it should cause an invalid opcode exception.')

@@ -12,13 +12,13 @@ contract TokenSyndicateFactory {
     function createSyndicate (
     address _tokenContract,
     uint256 _tokenExchangeRate,
-    uint256 _minBountyPerKwei,
+    uint256 _bountyPerKwei,
     uint256 _maxPresaleEthAllowed,
     uint256 _refundStartBlock) returns (address newSyndicateAddress){
         TokenSyndicate newSyndicate = (new TokenSyndicate(
             _tokenContract,
             _tokenExchangeRate,
-            _minBountyPerKwei,
+            _bountyPerKwei,
             _maxPresaleEthAllowed,
             _refundStartBlock));
         LogNewTokenSyndicate(address(newSyndicate));
